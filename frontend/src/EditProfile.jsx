@@ -1,0 +1,170 @@
+
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "./api";
+
+export default function EditProfile() {
+  const navigate = useNavigate();
+
+  const [name, setName] = useState("");
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfile() {
+      try {
+        const response = await api.get("/auth/profile");
+
+        if (active) {
+          setName(response.data.user.name);
+        }
+      } catch (err) {
+        if (active) {
+          setError(
+            err.response?.data?.message || "Unable to load your profile."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoadingProfile(false);
+        }
+      }
+    }
+
+    loadProfile();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    const trimmedName = name.trim();
+
+    if (trimmedName.length < 3) {
+      setError("Name must be at least 3 characters.");
+      return;
+    }
+
+    if (trimmedName.length > 80) {
+      setError("Name cannot exceed 80 characters.");
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(trimmedName)) {
+      setError("Name must contain at least one letter (A-Z).");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const response = await api.put("/auth/profile", {
+        name: trimmedName,
+      });
+
+      setName(response.data.user.name);
+      setSuccess("Your profile was updated successfully.");
+
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 900);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Unable to update your profile."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loadingProfile) {
+    return (
+      <main className="auth-page">
+        <div className="form-side">
+          <section className="register-card">
+            <p>Loading your profile...</p>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="auth-page">
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+
+      <div className="form-side">
+        <section className="register-card">
+          <Link to="/dashboard" className="brand">
+            <span className="brand-mark">A</span>
+            <span>AuthVault</span>
+          </Link>
+
+          <div className="form-heading">
+            <p className="form-kicker">ACCOUNT SETTINGS</p>
+            <h1>Edit profile</h1>
+            <p>Update the name associated with your account.</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label className="label-row" htmlFor="name">
+                Full name
+              </label>
+
+              <input
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                minLength={3}
+                maxLength={80}
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setError("");
+                  setSuccess("");
+                }}
+                required
+              />
+            </div>
+
+            {error && (
+              <p className="form-message" role="alert">
+                {error}
+              </p>
+            )}
+
+            {success && (
+              <p className="form-message" role="status">
+                {success}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="submit-button"
+              disabled={saving}
+            >
+              {saving ? "Saving changes..." : "Save changes"}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            <Link to="/dashboard">Cancel and return to dashboard</Link>
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
