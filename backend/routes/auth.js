@@ -12,13 +12,20 @@ const { firebaseAuth } = require("../config/firebaseAdmin");
 const router = express.Router();
 
 // Limit login attempts to 5 per 15-minute window.
+// Limit login attempts to 5 failed attempts per 15-minute window.
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 5,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 5, // Limit each IP to 5 failed requests per windowMs
     standardHeaders: "draft-8",
     legacyHeaders: false,
+    
+    // THE BEST PRACTICE FIX:
+    // This tells the limiter to ignore requests that result in a successful login (HTTP 200).
+    // It will ONLY count requests that fail (like a wrong password returning HTTP 401).
+    skipSuccessfulRequests: true,
+
     message: {
-        message: "Too many login attempts. Please try again in 15 minutes.",
+        message: "Too many failed login attempts. Please try again in 15 minutes.",
     },
 });
 

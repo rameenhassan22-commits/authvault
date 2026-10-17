@@ -5,26 +5,17 @@ import api from "./api";
 export default function ChangePassword() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
+  const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // New state to track which password fields are visible
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   function handleChange(event) {
-    setForm({
-      ...form,
-      [event.target.name]: event.target.value,
-    });
+    setForm({ ...form, [event.target.name]: event.target.value });
     setError("");
     setSuccess("");
   }
@@ -34,25 +25,10 @@ export default function ChangePassword() {
     setError("");
     setSuccess("");
 
-    if (form.newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
-      return;
-    }
-
-    if (form.newPassword.length > 72) {
-      setError("New password cannot exceed 72 characters.");
-      return;
-    }
-
-    if (form.newPassword !== form.confirmPassword) {
-      setError("New passwords do not match.");
-      return;
-    }
-
-    if (form.currentPassword === form.newPassword) {
-      setError("Your new password must differ from your current password.");
-      return;
-    }
+    if (form.newPassword.length < 8) return setError("New password must be at least 8 characters.");
+    if (form.newPassword.length > 72) return setError("New password cannot exceed 72 characters.");
+    if (form.newPassword !== form.confirmPassword) return setError("New passwords do not match.");
+    if (form.currentPassword === form.newPassword) return setError("Your new password must differ from your current password.");
 
     setLoading(true);
 
@@ -63,29 +39,17 @@ export default function ChangePassword() {
       });
 
       setSuccess(response.data?.message || "Password changed successfully.");
-
       sessionStorage.removeItem("authvault_token");
+      setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
 
-      setForm({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-
-      // Require the user to sign in again.
       setTimeout(() => {
         navigate("/login", {
           replace: true,
-          state: {
-            message: "Password changed successfully. Please log in again.",
-          },
+          state: { message: "Password changed successfully. Please log in again." },
         });
       }, 1200);
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-        "Unable to change password. Please try again."
-      );
+      setError(err.response?.data?.message || "Unable to change password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,12 +60,18 @@ export default function ChangePassword() {
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
 
-      <div className="form-side">
-        <section className="register-card">
-          <Link to="/dashboard" className="brand">
+      <div className="settings-container">
+        {/* Top Back Link */}
+        <Link to="/dashboard" className="back-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to dashboard
+        </Link>
+
+        <section className="settings-card">
+          <div className="brand" style={{ marginBottom: "24px" }}>
             <span className="brand-mark">A</span>
             <span>AuthVault</span>
-          </Link>
+          </div>
 
           <div className="form-heading">
             <p className="form-kicker">ACCOUNT SECURITY</p>
@@ -110,11 +80,8 @@ export default function ChangePassword() {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Current Password Field */}
             <div className="field">
-              <label className="label-row" htmlFor="currentPassword">
-                Current password
-              </label>
+              <label className="label-row" htmlFor="currentPassword">Current password</label>
               <div className="password-wrap">
                 <input
                   id="currentPassword"
@@ -125,22 +92,14 @@ export default function ChangePassword() {
                   onChange={handleChange}
                   required
                 />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowCurrent((prev) => !prev)}
-                  aria-label={showCurrent ? "Hide password" : "Show password"}
-                >
+                <button type="button" className="password-toggle" onClick={() => setShowCurrent(!showCurrent)}>
                   {showCurrent ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
 
-            {/* New Password Field */}
             <div className="field">
-              <label className="label-row" htmlFor="newPassword">
-                New password
-              </label>
+              <label className="label-row" htmlFor="newPassword">New password</label>
               <div className="password-wrap">
                 <input
                   id="newPassword"
@@ -153,23 +112,15 @@ export default function ChangePassword() {
                   onChange={handleChange}
                   required
                 />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowNew((prev) => !prev)}
-                  aria-label={showNew ? "Hide password" : "Show password"}
-                >
+                <button type="button" className="password-toggle" onClick={() => setShowNew(!showNew)}>
                   {showNew ? "Hide" : "Show"}
                 </button>
               </div>
               <small className="field-hint">Use between 8 and 72 characters.</small>
             </div>
 
-            {/* Confirm Password Field */}
             <div className="field">
-              <label className="label-row" htmlFor="confirmPassword">
-                Confirm new password
-              </label>
+              <label className="label-row" htmlFor="confirmPassword">Confirm new password</label>
               <div className="password-wrap">
                 <input
                   id="confirmPassword"
@@ -182,48 +133,23 @@ export default function ChangePassword() {
                   onChange={handleChange}
                   required
                 />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowConfirm((prev) => !prev)}
-                  aria-label={showConfirm ? "Hide password" : "Show password"}
-                >
+                <button type="button" className="password-toggle" onClick={() => setShowConfirm(!showConfirm)}>
                   {showConfirm ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
 
-            {error && (
-              <p className="form-message" role="alert">
-                {error}
-              </p>
-            )}
+            {error && <p className="form-message" role="alert">{error}</p>}
+            {success && <p className="form-message success" role="status">{success}</p>}
 
-            {success && (
-              <p className="form-message" role="status">
-                {success}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              className="submit-button"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner" />
-                  Updating password...
-                </>
-              ) : (
-                "Update password"
-              )}
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? <><span className="spinner" /> Updating password...</> : "Update password"}
             </button>
+            
+            <Link to="/dashboard" className="cancel-button">
+              Cancel
+            </Link>
           </form>
-
-          <p className="auth-footer">
-            <Link to="/dashboard">Back to dashboard</Link>
-          </p>
         </section>
       </div>
     </main>
